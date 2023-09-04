@@ -1,59 +1,146 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-router" target="_blank" rel="noopener">router</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-vuex" target="_blank" rel="noopener">vuex</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div id="app">
+    <h1>Juego del ahorcado</h1>
+    <h2>Adivina la palabra</h2>
+    <div id="palabra">
+      <span v-for="letra in palabraOculta">{{ letra }}</span>
+    </div>
+
+    <div class="teclado">
+      <button id="btn" v-for="letra in letras" :key="letra" @click="adivinar(letra)" :data-letra="letra" v-if="!enabled" disabled>{{ letra }}</button>
+      <button id="btn" v-for="letra in letras"  @click="adivinar(letra)" :data-letra="letra" v-else>{{ letra }}</button>
+
+    </div>
   </div>
 </template>
 
 <script>
+import palabras from '@/assets/game/ahorcado/palabras.json';
+
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
+
+  data() {
+    return {
+      palabraOculta: [],
+      palabrasJuego: palabras,
+      letra: "",
+      palabra: "",
+      fallos: 0,
+      enabled:true,
+      letras: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+
+    };
+  },
+  mounted() {
+    this.palabra = this.obtenerPalabraAleatoria();
+    for (const l of this.palabra) {
+      this.palabraOculta.push("_");
+    }
+  },
+  methods: {
+    obtenerPalabraAleatoria() {
+      // Obtener un índice aleatorio
+      const indiceAleatorio = Math.floor(Math.random() * this.palabrasJuego.palabras.length);
+
+      // Obtener la palabra en la posición aleatoria
+      const palabraAleatoria = this.palabrasJuego.palabras[indiceAleatorio];
+      return palabraAleatoria;
+    },
+    adivinar(le) {
+
+
+      const letraEnPalabra = this.palabra.includes(le);
+      const botones = document.querySelectorAll(".teclado button");
+
+
+      botones.forEach((boton) => {
+        const letraBoton = boton.getAttribute("data-letra");
+        if (le === letraBoton) {
+          if (letraEnPalabra) {
+            for (var x = 0; x < this.palabra.length; x++) {
+              if (le == this.palabra.charAt(x)) {
+                this.palabraOculta[x] = le
+
+              }
+
+            }
+            boton.classList.add("correcta");
+          } else {
+            boton.classList.add("incorrecta");
+            this.fallos++;
+
+          }
+        }
+      });
+
+
+
+      if (this.fallos === 10) {
+        this.perder();
+        this.enabled = false;
+      }
+
+      if (this.palabraOculta.join("") === this.palabra) {
+        this.ganar();
+      }
+    },
+    perder() {
+      alert("¡Has perdido!");
+    },
+    ganar() {
+      alert("¡Has ganado!");
+    },
+  },
+};
+
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+#palabra {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 50px;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+
+.letra {
+  font-size: 24px;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+
+#cuerpo {
+  display: flex;
+  justify-content: center;
 }
-a {
-  color: #42b983;
+
+img {
+  width: 100px;
+}
+
+.teclado {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  margin-bottom: 10px;
+}
+
+.teclado>button {
+  
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 24px;
+  font-family: sans-serif;
+  margin: 10px;
+}
+
+.teclado>button:hover {
+  background-color: #eee;
+}
+
+.teclado>button.correcta {
+  background-color: #00ff00;
+}
+
+.teclado>button.incorrecta {
+  background-color: #ff0000;
 }
 </style>
